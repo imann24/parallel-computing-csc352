@@ -54,13 +54,13 @@ def main():
     """
 
     # get the number of terms
-    steps =input("How many steps?")
+    steps = int(input("How many steps?"))
 
     # get the number of processes running
-    process_count = input("How many processes?")
+    process_count = int(input("How many processes?"))
 
     start_time = time.time()
-    
+
     # start T
     jobs = []
     queue = multiprocessing.Queue()
