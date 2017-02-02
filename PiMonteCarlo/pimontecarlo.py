@@ -1,7 +1,8 @@
 # pimontecarlo.py
-# Mann, Isaiah
+# author: Isaiah Mann
+# adapted from code by Dominique Thiebaut
 #
-# Uses Monte Carlo to calculate Pi
+# Uses Monte Carlo Algorithm to calculate Pi
 # Uses multiprocessing
 
 from __future__ import print_function
@@ -9,14 +10,6 @@ import multiprocessing
 import random
 
 circle_const = 4.0
-
-def f( x ):
-    """
-    The function being integrated, and which returns
-    an approximation of Pi when summed up over an interval
-    of integers.
-    """
-    return 4.0 / ( 1 + x*x )
 
 class WorkerProcess(multiprocessing.Process):
     """
