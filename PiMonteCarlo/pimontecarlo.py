@@ -8,6 +8,7 @@
 from __future__ import print_function
 import multiprocessing
 import random
+import time
 
 circle_const = 4.0
 
@@ -58,6 +59,8 @@ def main():
     # get the number of processes running
     process_count = input("How many processes?")
 
+    start_time = time.time()
+    
     # start T
     jobs = []
     queue = multiprocessing.Queue()
@@ -73,7 +76,9 @@ def main():
     for i in range(process_count):
         sum += queue.get()
 
+    elapsed_time = time.time() - start_time
     # print result
-    print( "Approximation of PI = %1.9f" % (circle_const * sum / steps))
+    print("Approximation of PI = %1.9f" % (circle_const * sum / steps))
+    print("Ran in %1.9f seconds" % elapsed_time)
 
 main()
