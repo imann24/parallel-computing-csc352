@@ -3,7 +3,7 @@
 # adapted from code by Dominique Thiebaut
 #
 # Uses Monte Carlo Algorithm to calculate Pi
-# Uses multiprocessing
+# Leverages multiprocessing
 
 from __future__ import print_function
 import multiprocessing
@@ -13,15 +13,15 @@ circle_const = 4.0
 
 class WorkerProcess(multiprocessing.Process):
     """
-    That's the main worker Process, as a class.
+    The main worker Process, as a class.
     It gets initialized via __init__ with the interval
-    and deltaX it sums up on.  It saves the accumulated
-    sum in self.sum
+    and steps it sums up.  It saves the accumulated
+    count of points inside the unit circle in self.inside
     """
 
     def __init__(self, args):
         """
-        args must contain n1, n2, and deltaX, in that order.
+        args must contain steps, queue, in that order.
         """
         multiprocessing.Process.__init__( self, args=args )
         self.count = args[0]
@@ -31,12 +31,15 @@ class WorkerProcess(multiprocessing.Process):
     def run( self ):
         """
         This will be called automatically by start() in
-        main.  It's the method that does all the work.
+        main.
         """
-        sum = 0.0
+        sum = 0
         for i in range(self.count):
+            # get a random point on the Unit Circle
             x = random.random()
             y = random.random()
+
+            # calculate whether the point is inside the circle
             d = x ** 2 + y ** 2
             if(d < 1):
                 self.inside += 1
@@ -50,22 +53,20 @@ def main():
     """
 
     # get the number of terms
-    steps =input("How many steps?"
-    )   #int( input( "# steps > " ) )
-    process_count = input("How many processes?")         #int( input( "# processes? > " ) )
+    steps =input("How many steps?")
+
+    # get the number of processes running
+    process_count = input("How many processes?")
 
     # start T
     jobs = []
     queue = multiprocessing.Queue()
 
+    # launch the proceses
     for i in range(process_count):
         job = WorkerProcess(args=(steps / process_count, queue))
         job.start()
         jobs.append(job)
-
-    # wait for the threads to be done
-    #for p in jobs:
-    #    p.join()
 
     # gather the sums
     sum = 0
