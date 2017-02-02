@@ -76,6 +76,7 @@ def main():
     for i in range(process_count):
         sum += queue.get()
 
+    # adapted from: http://stackoverflow.com/questions/3620943/measuring-elapsed-time-with-the-time-module
     elapsed_time = time.time() - start_time
     # print result
     print("Approximation of PI = %1.9f" % (circle_const * sum / steps))
