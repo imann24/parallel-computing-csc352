@@ -12,51 +12,24 @@
  #include <unistd.h>
  #include "mpi.h"
 
- #define NUMBERROWS 28
+ #define NUMBERROWS 100000
  #define esc 27
  #define cls() printf("%c[2J",esc)
  #define pos(row,col) printf("%c[%d;%dH",esc,row,col)
  #define MANAGER 0
+ #define DISH_FILE "dish.txt"
 
- char  *DISH0[ NUMBERROWS ];
- char  *DISH1[ NUMBERROWS ];
- char  *PATTERN[NUMBERROWS] = {
-   "                                                                                  ",
-   "   #                                                                              ",
-   " # #                                            ###                               ",
-   "  ##                                                                              ",
-   "                                                                                  ",
-   "                                                      #                           ",
-   "                                                    # #                           ",
-   "                                                     ##                           ",
-   "                                                                                  ",
-   "                                                                                  ",
-   "                                                                                  ",
-   "                                                                                  ",
-   "             #                                                                    ",
-   "           # #                                                                    ",
-   "            ##                                                                    ",
-   "                                                                                  ",
-   "                                                                                  ",
-   "                                                                                  ",
-   "                                                                                  ",
-   "                                                                                  ",
-   "                                                                                  ",
-   "                                                                                  ",
-   "                                                                                  ",
-   "                                                                                  ",
-   "                                                                                  ",
-   "                                                                                  ",
-   "                                                                                  ",
-   "                                                                                  "
- };
+ char* DISH0[NUMBERROWS];
+ char* DISH1[NUMBERROWS];
+ char* PATTERN[NUMBERROWS];
+
  int ROWSIZE = strlen( "                                                                                  ") + 1;
 
- //------------------------------- prototypes --------------------------------
- void life(char**, char**, int, int);
- void initDishes( int  );
- void print( char **, int );
-
+//------------------------------- prototypes --------------------------------
+void life(char**, char**, int, int);
+void initDishes( int  );
+void print( char **, int );
+void readDish();
  // --------------------------------------------------------------------------
  // initDishes
  // inits the dishes (current and future)
@@ -79,7 +52,8 @@
  // inits the dishes (current and future)
  // (Buggy: attempts to declare only 1 half of the array, plus boundary
  //  rows, depending on rank.  Needs a bit more debugging...)
- void initDishes2( int rank ) {
+ void initDishes2( int rank )
+ {
    int i;
 
    // init to null all entries.  This way we'll be
@@ -245,6 +219,22 @@
    }
  }
 
+void readDish()
+{
+     FILE* filePointer;
+     filePointer = fopen(DISH_FILE, "r");
+     int dishIndex = 0;
+     while(!feof(filePointer))
+     {
+          fgets(PATTERN[dishIndex], ROWSIZE, filePointer);
+          if(feof(filePointer))
+          {
+               break;
+          }
+          PATTERN[dishIndex][ROWSIZE - 1] = '\0';
+     }
+     close(filePointer);
+}
 
 // --------------------------------------------------------------------------
 int main( int argc, char* argv[] ) {
@@ -264,6 +254,9 @@ int main( int argc, char* argv[] ) {
      //--- get rank ---
      MPI_Comm_rank( MPI_COMM_WORLD, &rank );
 
+     // Read the dish in from the text file:
+     readDish();
+     
      //--- init the dishes as half of the original problem ---
      initDishes( rank );
 
