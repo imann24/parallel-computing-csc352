@@ -12,7 +12,7 @@
  #include <unistd.h>
  #include "mpi.h"
 
- #define NUMBERROWS 100000
+ #define NUMBERROWS 10000
  #define esc 27
  #define cls() printf("%c[2J",esc)
  #define pos(row,col) printf("%c[%d;%dH",esc,row,col)
@@ -35,13 +35,12 @@ void readDish();
  // inits the dishes (current and future)
  void initDishes( int rank ) {
    int i;
-
    //--- initialize other dish with spaces.  Make it same dimension as DISH0. ---
    for (i = 0; i< NUMBERROWS; i++ )  {
-     DISH0[i] = (char *) malloc( ( strlen( PATTERN[0] ) + 1 ) * sizeof( char ) );
+     DISH0[i] = (char *) malloc( ( strlen( PATTERN[i] ) + 1 ) * sizeof( char ) );
      strcpy( DISH0[i], PATTERN[i] );
 
-     DISH1[i] = (char *) malloc( (strlen( DISH0[0] )+1) * sizeof( char )  );
+     DISH1[i] = (char *) malloc( (strlen( DISH0[i] )+1) * sizeof( char )  );
      strcpy( DISH1[i], PATTERN[i] );
    }
  }
@@ -67,7 +66,6 @@ void readDish();
    if ( rank == 0 ) {
      //--- initialize dishes with lower half of pattern ---
      for (i = 0; i< NUMBERROWS/2+1; i++ )  {
-
        DISH0[i] = (char *) malloc( (strlen( PATTERN[0] ) + 1 ) * sizeof( char ) );
        strcpy( DISH0[i], PATTERN[i] );
 
@@ -228,12 +226,12 @@ void readDish()
      {
           PATTERN[dishIndex] = (char *) malloc(ROWSIZE * sizeof(char));
           fgets(PATTERN[dishIndex], ROWSIZE, filePointer);
+          PATTERN[dishIndex][ROWSIZE - 1] = '\0';
           dishIndex++;
           if(feof(filePointer))
           {
                break;
           }
-          PATTERN[dishIndex][ROWSIZE - 1] = '\0';
      }
      fclose(filePointer);
 }
