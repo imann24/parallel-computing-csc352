@@ -23,7 +23,7 @@
  char* DISH1[NUMBERROWS];
  char* PATTERN[NUMBERROWS];
 
- int ROWSIZE = strlen( "                                                                                  ") + 1;
+ int ROWSIZE = strlen("                                                                                  ") + 1;
 
 //------------------------------- prototypes --------------------------------
 void life(char**, char**, int, int);
@@ -226,18 +226,22 @@ void readDish()
      int dishIndex = 0;
      while(!feof(filePointer))
      {
+          PATTERN[dishIndex] = (char *) malloc(ROWSIZE * sizeof(char));
           fgets(PATTERN[dishIndex], ROWSIZE, filePointer);
+          dishIndex++;
           if(feof(filePointer))
           {
                break;
           }
           PATTERN[dishIndex][ROWSIZE - 1] = '\0';
      }
-     close(filePointer);
+     fclose(filePointer);
 }
 
 // --------------------------------------------------------------------------
 int main( int argc, char* argv[] ) {
+     // Read the dish in from the text file:
+     readDish();
      int gens = 3000;      // # of generations
      int i;
      char **dish, **future, **temp;
@@ -253,10 +257,6 @@ int main( int argc, char* argv[] ) {
      MPI_Comm_size(MPI_COMM_WORLD, &processCount);
      //--- get rank ---
      MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-
-     // Read the dish in from the text file:
-     readDish();
-     
      //--- init the dishes as half of the original problem ---
      initDishes( rank );
 
