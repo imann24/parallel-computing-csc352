@@ -53,7 +53,7 @@
  int ROWSIZE = strlen( "                                                                                  ") + 1;
 
  //------------------------------- prototypes --------------------------------
- void life( char**, char**, int );
+ void life(char**, char**, int, int);
  void initDishes( int  );
  void print( char **, int );
 
@@ -277,7 +277,7 @@ int main( int argc, char* argv[] ) {
 
      print( dish, rank );          // # first generation, in petri dish
 
-     int rowsPerProcess = dishLength / NUMBERROWS;
+     int rowsPerProcess = processCount / NUMBERROWS;
      int lowerRow, upperRow, rowBelow, rowAbove, rankBelow, rankAbove;
      lowerRow = rowsPerProcess * rank;
      upperRow = rowsPerProcess * (rank + 1);
@@ -324,8 +324,10 @@ int main( int argc, char* argv[] ) {
                //          buffer                #items   item-size src/dest tag   world
                // Send lowerRow to previous process (rank - 1):
                MPI_Send(future[lowerRow], ROWSIZE, MPI_CHAR, rankBelow, rank, MPI_COMM_WORLD);
+               printf( "%d sending to %d\n", rank, rankBelow);
                // Send upperRow to next process (rank + 1):
                MPI_Send(future[upperRow], ROWSIZE, MPI_CHAR, rankAbove, rank, MPI_COMM_WORLD);
+               printf( "%d sending to %d\n", rank, rankAbove);
                // Receive row below bottom row from rank below:
                MPI_Recv(future[rowBelow], ROWSIZE, MPI_CHAR, rankBelow, rank, MPI_COMM_WORLD, &status);
                // Receive row above top row from rank above:
@@ -333,14 +335,18 @@ int main( int argc, char* argv[] ) {
           }
           else
           {
+               printf( "%d waiting on %d\n", rank, rankAbove);
                // Receive row above top row from rank above:
                MPI_Recv(future[rowAbove], ROWSIZE, MPI_CHAR, rankAbove, rank, MPI_COMM_WORLD, &status);
+               printf( "%d waiting on %d\n", rank, rankBelow);
                // Receive row below bottom row from rank below:
                MPI_Recv(future[rowBelow], ROWSIZE, MPI_CHAR, rankBelow, rank, MPI_COMM_WORLD, &status);
                // Send upperRow to next process (rank + 1):
                MPI_Send(future[upperRow], ROWSIZE, MPI_CHAR, rankAbove, rank, MPI_COMM_WORLD);
+               printf( "%d sending to %d\n", rank, rankAbove);
                // Send lowerRow to previous process (rank - 1):
                MPI_Send(future[lowerRow], ROWSIZE, MPI_CHAR, rankBelow, rank, MPI_COMM_WORLD);
+               printf( "%d sending to %d\n", rank, rankBelow);
           }
           // copy future to dish
           temp = dish;
