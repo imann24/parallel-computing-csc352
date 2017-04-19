@@ -1,0 +1,19 @@
+SERIAL
+real	4m20.715s
+user	4m19.636s
+sys	0m0.220s
+
+2 MPI NODES
+real	2m24.885s
+user	2m15.092s
+sys	0m4.864s
+
+4 MPI NODES
+real	1m28.254s
+user	1m17.924s
+sys	0m8.556s
+
+8 MPI NODES
+real	0m57.600s
+user	0m45.732s
+sys	0m10.332s
