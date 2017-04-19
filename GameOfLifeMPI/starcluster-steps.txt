@@ -1,0 +1,66 @@
+Steps to Run on StarCluster (AWS EC2)
+
+STEP 1:
+starcluster start myClusterIBM
+
+STEP 2:
+starcluster sshmaster myclusterIBM
+
+STEP 3:
+su - sgeadmin
+
+STEP 4:
+logout
+logout
+
+STEP 5:
+starcluster put myclusterABC --user sgeadmin GameOfLife.c
+starcluster put myclusterABC --user sgeadmin GameOfLifeMPIN.c
+starcluster put myclusterABC --user sgeadmin dish.txt
+
+STEP 6:
+starcluster sshmaster myclusterIBM
+
+STEP 7:
+gcc -o GOL-S GameOfLife.c
+
+STEP 8:
+time ./GOL-S
+(REMEMBER TO COPY THE TIME RESULTS)
+
+STEP 9:
+mpicc -o GOL GameOfLifeMPIN.c
+
+STEP 10:
+cat /etc/hosts | tail -n 10 | cut -d' ' -f 2 > hosts
+
+STEP 11:
+time mpirun.mpich2 -n 2 -f hosts ./piN
+time mpirun.mpich2 -n (3..10) -f hosts ./GOL
+(REMEMBER TO COPY THE TIME RESULTS)
+
+STEP 12:
+logout
+
+(IF SPEEDUP NOT FOUND WITH 10 NODES):
+
+STEP 13:
+starcluster addnode myClusterIBM
+
+STEP 14:
+starcluster sshmaster myclusterIBM
+
+STEP 15:
+su - sgeadmin
+
+STEP 16:
+cat /etc/hosts | tail -n 11 | cut -d' ' -f 2 > hosts
+time mpirun.mpich2 -n (11..n) -f hosts ./GOL
+(REMEMBER TO COPY THE TIME RESULTS. RUN UNTIL FOUND SPEEDUP)
+
+STEP 17:
+logout
+logout
+
+STEP 18:
+starcluster terminate myClusterIBM

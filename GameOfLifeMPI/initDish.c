@@ -75,7 +75,7 @@ int main( int argc, char** argv ) {
   char** dish;
 
   //--- define the number of lines wanted ---
-  N = 40;
+  N = 10000;
 
   //--- create an array of N lines ---
   dish = createDish( N );

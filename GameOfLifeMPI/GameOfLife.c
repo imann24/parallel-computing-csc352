@@ -25,51 +25,25 @@
 #include <unistd.h>
 
 // ------------------------------------- MACROS ----------------------------------------
-#define NUMBERROWS 28
+#define NUMBERROWS 10000
 #define esc 27
 #define cls() printf("%c[2J",esc)
 #define pos(row,col) printf("%c[%d;%dH",esc,row,col)
+#define DISH_FILE "dish.txt"
 
 // ------------------------------------- GLOBALS ----------------------------------------
-char  *DISH0[ NUMBERROWS ];
-char  *DISH1[ NUMBERROWS ];
-char  *PATTERN[NUMBERROWS] = {
-  "                                                                                  ",
-  "   #                                                                              ",
-  " # #                                            ###                               ",
-  "  ##                                                                              ",
-  "                                                                                  ",
-  "                                                      #                           ",
-  "                                                    # #                           ",
-  "                                                     ##                           ",
-  "                                                                                  ",
-  "                                                                                  ",
-  "                                                                                  ",
-  "                                                                                  ",
-  "             #                                                                    ",
-  "           # #                                                                    ",
-  "            ##                                                                    ",
-  "                                                                                  ",
-  "                                                                                  ",
-  "                                                                                  ",
-  "                                                                                  ",
-  "                                                                                  ",
-  "                                                                                  ",
-  "                                                                                  ",
-  "                                                                                  ",
-  "                                                                                  ",
-  "                                                                                  ",
-  "                                                                                  ",
-  "                                                                                  ",
-  "                                                                                  "
-};
+
+int ROWSIZE = strlen("                                                                                  ") + 1;
+char  *DISH0[ NUMBERROWS];
+char  *DISH1[ NUMBERROWS];
+char  *PATTERN[NUMBERROWS];
 
 // --------------------------------- prototypes -----------------------------
 void life( char**, char** );
 void initDishes( );
 void clearScreen();
 void print( char ** );
-
+void readDish();
 
 // --------------------------------------------------------------------------
 // initDishes
@@ -79,10 +53,10 @@ void initDishes( ) {
 
   //--- initialize other dish with spaces.  Make it same dimension as DISH0. ---
   for (i = 0; i< NUMBERROWS; i++ )  {
-    DISH0[i] = (char *) malloc( (strlen( PATTERN[0] ) + 1 ) * sizeof( char ) );
+    DISH0[i] = (char *) malloc( (strlen( PATTERN[i] ) + 1 ) * sizeof( char ) );
     strcpy( DISH0[i], PATTERN[i] );
 
-    DISH1[i] = (char *) malloc( (strlen( DISH0[0] )+1) * sizeof( char )  );
+    DISH1[i] = (char *) malloc( (strlen( DISH0[i] )+1) * sizeof( char )  );
     strcpy( DISH1[i], DISH0[i] );
   }
 
@@ -127,7 +101,7 @@ void  life( char** dish, char** newGen ) {
    * the rules of the game. A new array of strings is returned.
    */
   int i, j, row;
-  int rowLength = strlen( dish[0] );
+  int rowLength = ROWSIZE;
   int dishLength = NUMBERROWS;
 
   for (row = 0; row < NUMBERROWS; row++) {// each row
@@ -183,13 +157,33 @@ void  life( char** dish, char** newGen ) {
   }
 }
 
+void readDish()
+{
+     printf("STARTING ON THE FILE");
+    FILE* filePointer;
+    filePointer = fopen(DISH_FILE, "r");
+    int dishIndex = 0;
+    while(!feof(filePointer))
+    {
+        PATTERN[dishIndex] = (char *) malloc(ROWSIZE * sizeof(char));
+        fgets(PATTERN[dishIndex], ROWSIZE, filePointer);
+        PATTERN[dishIndex][ROWSIZE - 1] = '\0';
+        dishIndex++;
+        if(feof(filePointer))
+        {
+            break;
+        }
+    }
+    fclose(filePointer);
+    printf("READ THE FILE");
+}
 
 // --------------------------------------------------------------------------
 int main( int argc, char* argv[] ) {
   int gens = 3000;      // # of generations
   int i;
   char **dish, **future, **temp;
-
+  readDish();
   //--- clear screen ---
   cls();
 
@@ -200,10 +194,6 @@ int main( int argc, char* argv[] ) {
   dish   = DISH0;
   future = DISH1;
 
-  //--- print first generation ---
-  print( dish );
-
-
   //--- iterate over all generations ---
   for ( i = 0; i < gens; i++) {
 
@@ -212,14 +202,6 @@ int main( int argc, char* argv[] ) {
     // apply the rules of life to the current population and
     // generate the next generation.
     life( dish, future );
-
-    // display the new generation (comment this out if you want
-    // the last generation, instead)
-    print( dish );
-
-    // add a bit of a delay to better see the visualization
-    // remove this part to get full timing.
-    sleep(1);  // 1 sec
 
     // copy future to dish
     temp = dish;
