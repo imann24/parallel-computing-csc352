@@ -194,10 +194,6 @@ int main( int argc, char* argv[] ) {
   dish   = DISH0;
   future = DISH1;
 
-  //--- print first generation ---
-  print( dish );
-
-
   //--- iterate over all generations ---
   for ( i = 0; i < gens; i++) {
 

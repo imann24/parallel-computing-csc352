@@ -5,31 +5,35 @@
  * Note: Requires even number of processes to run properly
  */
 
- #include <stdio.h>
- #include <strings.h>
- #include <stdlib.h>
- #include <time.h>
- #include <unistd.h>
- #include "mpi.h"
+#include <stdio.h>
+#include <strings.h>
+#include <stdlib.h>
+#include <time.h>
+#include <unistd.h>
+#include "mpi.h"
 
- #define NUMBERROWS 10000
- #define esc 27
- #define cls() printf("%c[2J",esc)
- #define pos(row,col) printf("%c[%d;%dH",esc,row,col)
- #define MANAGER 0
- #define DISH_FILE "dish.txt"
+#define NUMBERROWS 10000
+#define esc 27
+#define cls() printf("%c[2J",esc)
+#define pos(row,col) printf("%c[%d;%dH",esc,row,col)
+#define MANAGER 0
+#define DISH_FILE "dish.txt"
+#define VERBOSE 0
 
- char* DISH0[NUMBERROWS];
- char* DISH1[NUMBERROWS];
- char* PATTERN[NUMBERROWS];
+char* DISH0[NUMBERROWS];
+char* DISH1[NUMBERROWS];
+char* PATTERN[NUMBERROWS];
 
- int ROWSIZE = strlen("                                                                                  ") + 1;
+int ROWSIZE = strlen("                                                                                  ") + 1;
+int READY_FLAG = 1;
 
 //------------------------------- prototypes --------------------------------
 void life(char**, char**, int, int);
 void initDishes( int  );
 void print( char **, int );
 void readDish();
+void sendRowsToManager(char** dish, int lowerRow, int upperRow);
+void receiveAllRows(char** dish, int upperRow, int numProcesses);
  // --------------------------------------------------------------------------
  // initDishes
  // inits the dishes (current and future)
@@ -104,28 +108,19 @@ void readDish();
 
  // --------------------------------------------------------------------------
  // print
- void print( char* dish[], int rank ) {
-   int i;
-
-   if ( rank == 0 ) {
-     //--- display lower half only ---
-     for (i=0; i<NUMBERROWS/2; i++ ) {
-       if ( dish[i] == NULL ) continue;
-       pos( i, 0 );
-       printf( "%s\n", dish[i] );
+void print(char* dish[], int rank)
+{
+     int i;
+     for(i=0; i<NUMBERROWS; i++)
+     {
+            if( dish[i] == NULL)
+            {
+                continue;
+            }
+            pos(i, 0);
+            printf("%s\n", dish[i]);
      }
-   }
-
-   if ( rank == 1 ) {
-     //--- display upper half only ---
-     for (i=NUMBERROWS/2; i<NUMBERROWS; i++ ) {
-       if ( dish[i] == NULL ) continue;
-       pos( i, 0 );
-       printf( "%s\n", dish[i] );
-     }
-
-   }
- }
+}
 
  // --------------------------------------------------------------------------
  void check( char** dish, char** future ) {
@@ -236,6 +231,46 @@ void readDish()
      fclose(filePointer);
 }
 
+void sendRowsToManager(char** dish, int lowerRow, int upperRow)
+{
+     int flag;
+     MPI_Status status;   // required variable for receive routines
+     // Wait to send until the manager sends a flag
+     MPI_Recv(&flag, 1, MPI_INT, MANAGER, 0, MPI_COMM_WORLD, &status);
+     int row;
+     for(row = lowerRow; row <= upperRow; row++)
+     {
+          if(dish[row] != NULL)
+          {
+               MPI_Send(dish[row], ROWSIZE, MPI_CHAR, MANAGER, 0, MPI_COMM_WORLD);
+          }
+     }
+}
+
+int getRankOfRow(int rowIndex, int numProcesses)
+{
+     // Use cross-multiplication to get the correct rank:
+     return rowIndex * numProcesses / NUMBERROWS;
+}
+
+// Should only be used by manager
+void receiveAllRows(char** dish, int upperRow, int numProcesses)
+{
+     int row;
+     int lastRankSeen = -1;
+     MPI_Status status;   // required variable for receive routines
+     for(row = upperRow + 1; row < NUMBERROWS; row++)
+     {
+          int currentRank = getRankOfRow(row, numProcesses);
+          if(currentRank > lastRankSeen)
+          {
+               MPI_Send(&READY_FLAG, 1, MPI_INT, currentRank, 0, MPI_COMM_WORLD);
+               lastRankSeen = currentRank;
+          }
+          MPI_Recv(dish[row], ROWSIZE, MPI_CHAR, currentRank, 0, MPI_COMM_WORLD, &status);
+     }
+}
+
 // --------------------------------------------------------------------------
 int main( int argc, char* argv[] ) {
      // Read the dish in from the text file:
@@ -260,18 +295,11 @@ int main( int argc, char* argv[] ) {
 
      dish   = DISH0;
      future = DISH1;
-
-     //check( dish, future );
-
      //--- clear screen ---
-     cls();
-
-     print( dish, rank );          // # first generation, in petri dish
-
-     int rowsPerProcess = processCount / NUMBERROWS;
+     int rowsPerProcess = NUMBERROWS / processCount;
      int lowerRow, upperRow, rowBelow, rowAbove, rankBelow, rankAbove;
      lowerRow = rowsPerProcess * rank;
-     upperRow = rowsPerProcess * (rank + 1);
+     upperRow = rowsPerProcess * (rank + 1) - 1;
      rowBelow = lowerRow - 1;
      rowAbove = upperRow + 1;
      rankBelow = rank - 1;
@@ -294,21 +322,16 @@ int main( int argc, char* argv[] ) {
           rankAbove = 0;
      }
      // iterate over all generations
-     for ( i = 0; i < gens; i++) {
-          pos( 33+rank, 0 );
-          printf( "Rank %d: Generation %d\n", rank, i );
-
+     for(i = 0; i < gens; i++)
+     {
+          if(VERBOSE)
+          {
+               pos(33+rank, 0);
+               printf( "Rank %d: Generation %d\n", rank, i );
+          }
           // apply the rules of life to the current population and
           // generate the next generation.
           life(dish, future, lowerRow, upperRow);
-
-          // display the new generation
-          //print( dish, rank );
-
-          // add a bit of a delay to better see the visualization
-          // remove this part to get full timing.
-          //if (rank == 0 ) sleep( 1 );
-
           if(rank % 2 == 0)
           {
                // Start at the second process (skip the manager)
@@ -338,13 +361,22 @@ int main( int argc, char* argv[] ) {
           dish = future;
           future = temp;
    }
-   //--- display the last generation ---
-   print(dish, rank);
-
+   if(rank == MANAGER)
+   {
+        receiveAllRows(dish, upperRow, processCount);
+        //--- display the last generation ---
+        print(dish, rank);
+   }
+   else
+   {
+        sendRowsToManager(dish, lowerRow, upperRow);
+   }
+   if(VERBOSE)
+   {
+        pos( 30+rank, 0 );
+        printf( "Process %d done.  Exiting\n\n", rank );
+   }
    //--- close MPI ---
-   pos( 30+rank, 0 );
-   printf( "Process %d done.  Exiting\n\n", rank );
    MPI_Finalize();
-
    return 0;
 }
