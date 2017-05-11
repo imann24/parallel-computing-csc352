@@ -1,11 +1,16 @@
 /*
  initDish.c
  D. Thiebaut
- Midified by Isaiah Mann to generate a dish with 10,000 lines
+ 
+ Modified by Isaiah Mann to generate a dish with 10,000 lines
  Demo program for generating a dish with N lines,
  where N is provided by the user, and where a pattern
  of cell is repeated many times until N lines have
  been created in the dish array.
+ 
+ Further modified to return a dish in the format
+ of the Python Map Reduce code for Game of Life
+ 
  The function createDish returns an array of N strings
  where the strings are repetitions of the pattern stored
  in the array pattern[].

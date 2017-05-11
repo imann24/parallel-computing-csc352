@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# D. Thiebaut
 # mapper.py
 # mapper for Conway's 2D Game of Life.
 # The input data has two possible formats:

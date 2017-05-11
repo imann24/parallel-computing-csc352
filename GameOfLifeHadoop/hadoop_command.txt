@@ -1,0 +1,5 @@
+hadoop jar /usr/lib/hadoop-0.20/contrib/streaming/hadoop-streaming-0.20.2-cdh3u5.jar \
+-file ./mapper.py -mapper ./mapper.py \
+-file ./shuffleSort.py -combiner ./shuffleSort.py \
+-file ./reducer.py -reducer ./reducer.py \
+-input dish0.txt -output output
